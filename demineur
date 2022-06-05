@@ -1,0 +1,513 @@
+/*
+-----------------------------------------------------------------
+//  Nom du projet : demineur.c                                 //
+//  Date : 05/06/2022                                          //
+//  Auteur : Nicolas Le Moigne                                 //
+//  Objet du projet : Créer un démineur classique fonctionnel  // 
+-----------------------------------------------------------------
+*/
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define FLUSH fflush(stdin)
+
+// On déclare les fonctions
+void difficulte(void);
+void debutant(void);
+void intermediaire(void);
+void expert( void );
+void perso(void);
+void gen_tableau(void);
+void affich_tableau(void);
+void affich_tableau_fin(void);
+void cherche(void);
+void perdu(void);
+void gagne(void);
+void relancer(void);
+void fin(void);
+
+// On déclare les variable
+int x, y;
+int M, N;
+float diff;
+int nb_mines_total = 0;
+int mines = 0;
+int tableau[50][50];                                     
+int vide_tableau[50][50];                          
+int tableau_final[50][50];
+int temps;
+int begin;
+int end;
+/*int tab1[5];
+int tab2[5];
+int tab3[5];
+int i = 1;
+int c = 0;*/
+
+// La fonction qui va se lancer à l'exécution du programme et donc lancer le jeu de démineur
+int main()
+{
+    printf("\t\tBienvenue sur mon Démineur !\n");
+/*    FILE* fichier = NULL;  // La fonction qui va vérifier que le fichier highscores existe déjà et sinon demander de le créer
+
+        fichier = fopen("highscores.txt", "r+");
+        if (fichier != NULL)
+        {
+          // On peut lire et écrire dans le fichier
+        }
+        else
+        {
+            printf("Impossible d'ouvrir le fichier highscores.txt veuillez le créer !");
+        }
+    */
+    difficulte();
+    return 0;
+}
+
+
+// La fonction qui va définir quel niveau le jeu va lancer
+void difficulte( void )                                    
+{
+    diff = 0;
+    while( (diff != 1) && (diff != 2) && (diff != 3) && (diff != 4))        
+    {
+        printf("\t\tChoisissez la difficulté à l'aide des chiffres 1 - 2 - 3 ou 4 :\n \t\t1 -> Débutant / 2 -> Intermédiaire / 3 -> Expert / 4 -> Partie personnalisée\n");   
+        scanf("%f", &diff);
+        FLUSH;
+        if( (diff != 1) && (diff != 2) && (diff != 3) && (diff != 4))
+        {
+            printf("\t\tS'il vous plaît écrivez uniquement 1, 2, 3 ou 4\n");
+        }
+    }   
+
+    if( diff == 1 )                                         
+    {
+        debutant();
+    }
+    else if( diff == 2 )
+    {
+        intermediaire();
+    }
+    else if( diff == 3 )
+    {
+        expert();
+    }
+    else if( diff == 4)
+    {
+        perso();
+    }
+}
+
+// La fonction pour la difficulté Débutant
+void debutant( void )                                     
+{
+    M = 9;
+    N = 9;
+    nb_mines_total = 10;
+    gen_tableau();
+    cherche();
+}
+
+
+// La fonction pour la difficulté Intermédiaire
+void intermediaire( void )                         
+{
+    M = 16;
+    N = 16;
+    nb_mines_total = 40;
+    gen_tableau();
+    cherche();
+}
+
+
+// La fonction pour la difficulté Expert
+void expert( void )                                       
+{
+    M = 16;
+    N = 30;
+    nb_mines_total = 99;
+    gen_tableau();
+    cherche();
+}
+
+
+// La fonction pour la difficulté Personnalisable
+void perso( void )
+{
+    M = 0;
+    N = 0;
+    nb_mines_total = 0;
+    printf("\t\tVeuillez rentrer les dimensions que vous souhaitez :\n");
+    printf("\t\tPremière valeur (x) :\n");
+    scanf("%d", &M);
+    printf("\t\tDeuxième valeur (y) :\n");
+    scanf("%d", &N);
+    printf("\t\tVeuillez renseigner le nombre de mines que vous souhaitez :\n");
+    scanf("%d", &nb_mines_total);
+    gen_tableau();
+    cherche();
+}
+
+
+// La fonction qui va générer le tableau
+void gen_tableau(void)                            
+{
+    int i = 0, j = 0;
+
+    srand(time(NULL));                              
+
+    while(j<N)                                        
+    {
+        while(i<M)
+        {
+            tableau[i][j] = '-';
+            vide_tableau[i][j] = tableau[i][j];        
+            tableau_final[i][j] = tableau[i][j];        
+            i++;
+        }
+        i = 0;
+        j++;
+    }
+    mines = 0;
+    while( mines < nb_mines_total )                           
+    {
+        i = rand()%(M);
+        j = rand()%(N);
+        if( tableau[i][j] != '*')                         
+        {
+            tableau[i][j] = '*';
+            tableau_final[i][j] = tableau[i][j];
+            mines++;
+        }
+    }
+    i = 0;
+    j = 0;
+
+    while( j < N )                                       
+    {
+        while( i < M)
+        {
+            if( tableau[i][j] != '*')
+            {
+                tableau[i][j] = 0;
+            }   
+            if((tableau[i-1][j-1] == '*') && (tableau[i][j] != '*'))
+            {
+                tableau[i][j]++;
+            }
+            if((tableau[i-1][j] == '*') && (tableau[i][j] != '*'))
+            {
+                tableau[i][j]++;
+            }
+            if((tableau[i][j-1] == '*') && (tableau[i][j] != '*'))
+            {
+                tableau[i][j]++;
+            }
+            if((tableau[i-1][j+1] == '*') && (tableau[i][j] != '*'))
+            {
+                tableau[i][j]++;
+            }
+            if((tableau[i+1][j-1] == '*') && (tableau[i][j] != '*'))
+            {
+                tableau[i][j]++;
+            }
+            if((tableau[i+1][j] == '*') && (tableau[i][j] != '*'))
+            {
+                tableau[i][j]++;
+            }
+            if((tableau[i][j+1] == '*') && (tableau[i][j] != '*'))
+            {
+                tableau[i][j]++;
+            }
+            if((tableau[i+1][j+1] == '*') && (tableau[i][j] != '*'))
+            {
+                tableau[i][j]++;
+            }
+            i++;
+        }
+        i = 0;
+        j++;
+    }
+    i = 0;
+    j = 0;
+}
+
+
+// La fonction qui va afficher le tableau
+void affich_tableau(void)                               
+{
+    int i = 0, j = 0, z = 0;
+    while( z < M )                                         
+    {
+        if( z == 0 )
+        {
+            printf("   x");
+        }
+        printf("\t|%d|", z);
+        z++;
+    }
+    printf("\n y \n");
+
+    while( j < N )                                                              
+    {   
+        printf("|%d|\t", j);
+        while( i < M)
+        {
+            if( vide_tableau[i][j] == '-')
+            {
+                printf("|%c|\t", vide_tableau[i][j]);
+
+            }
+            else if( tableau[i][j] == 0 )              
+            {
+                vide_tableau[i][j] = '0';                
+                printf("|%c|\t", vide_tableau[i][j]);
+            }
+            else
+            {
+                printf("|%d|\t", vide_tableau[i][j]);
+
+            }
+            i++;
+        }
+        printf("\n");
+        i = 0;
+        j++;
+    }
+}
+
+
+// La fonction qui va faire fonctionner la partie de démineur
+void cherche( void )
+{
+    int q = 0, i=0, j=0, match=0;
+    affich_tableau();
+    clock_t tstart = clock();
+    while( j < N )                                         
+    {
+        while( i < M )
+        {
+            if(tableau[i][j] == vide_tableau[i][j])
+            {
+                match++;
+            }
+            i++;
+        }
+        i = 0;
+        j++;
+    }
+    if( match == (( M * N ) - nb_mines_total))               
+    {
+        gagne();
+    }
+    printf("\nEnter the x value, then a space, then the y value:");
+    scanf("%d %d", &x, &y);                               
+    FLUSH;
+    if( (x >= M) || (x < 0) || (y < 0) || (y >= N) )
+    {
+        printf("\nPlease enter a value inside the grid\n");
+        cherche();
+    }
+    if( tableau[x][y] == '*' )                            
+    {
+        perdu();
+    }
+    if( vide_tableau[x][y] != '-' )
+    {
+        printf("\nPlease enter a value that has not already been entered\n");
+        cherche();
+    }
+
+    else                                               
+    {
+        vide_tableau[x][y] = tableau[x][y];
+        if( tableau[x][y] == 0 )
+        {
+            if( tableau[x-1][y-1] == 0 )
+            {
+                vide_tableau[x-1][y] = tableau[x-1][y];
+            }
+            if( tableau[x-1][y] == 0 )
+            {
+                vide_tableau[x-1][y] = tableau[x-1][y];
+            }
+            if( tableau[x][y-1] == 0 )
+            {
+                vide_tableau[x][y-1] = tableau[x][y-1];
+            }
+            if( tableau[x-1][y+1] == 0 )
+            {
+                vide_tableau[x-1][y+1] = tableau[x-1][y+1];
+            }
+            if( tableau[x+1][y-1] == 0 )
+            {
+                vide_tableau[x+1][y-1] = tableau[x+1][y-1];
+            }
+            if( tableau[x+1][y] == 0 )
+            {
+                vide_tableau[x+1][y] = tableau[x+1][y];
+            }
+            if( tableau[x][y+1] == 0 )
+            {
+                vide_tableau[x][y+1] = tableau[x][y+1];
+            }
+            if( tableau[x+1][y+1] == 0 )
+            {
+                vide_tableau[x+1][y+1] = tableau[x+1][y+1];
+            }
+        }
+        cherche();
+    }
+}
+
+
+// La fonction qui va se lancer si on touche une bombe afin d'afficher l'emplacement des bombes dans le tableau et demander si on veut rejouer
+void perdu( void )                                                        
+{
+    affich_tableau_fin();
+    printf("\n\t\tVous avez touché une mine aux coordonnées %d,%d\n\t\tVous avez PERDU !", x, y);
+    relancer();
+}
+
+
+// La fonction qui va afficher à la fin le tableau et l'emplacement des bombes
+void affich_tableau_fin( void )                    
+{
+    int i = 0, j = 0, z = 0;
+    while( z < M )
+    {
+        if( z == 0 )
+        {
+            printf("   x");
+        }
+        printf("|%d|\t", z);
+        z++;
+    }
+    printf("\n y \n");
+
+    while( j < N )
+    {   
+        printf("|%d|\t", j);
+        while( i < M)
+        {
+            printf("|%c|\t", tableau_final[i][j]);
+            i++;
+        }
+        printf("\n");
+        i = 0;
+        j++;
+    }
+}
+
+
+// La fonction qui va se lancer si on gagne
+void gagne( void )                                      
+{
+    clock_t end = clock();
+    temps = (end - begin) * 1000 / CLOCKS_PER_SEC;
+    printf("\n\n\n\t\t\tVous avez GAGNÉ en %d secondes !\n\n\n", temps);
+/*    if (diff == 4)
+    {
+        relancer();
+    }
+    else if (diff == 1)
+    {
+        c = fgets(int * tab1[i], fichier);
+        if (c < temps)
+        {
+            while (c < temps)
+            {
+                i++;
+                c = fgets(int * i,fichier);
+            }
+        if (i == 1)
+        {
+            fprintf(fichier * tab1[i],"%d", temps)
+        }
+        else if (i == 2)
+        {
+    
+        }
+        fprintf(fichier * tab1[i],"%d", temps)
+        relancer();
+        }
+        else if 
+        {
+            printf("\n\n\n\t\t\tVous avez GAGNÉ en %d secondes ! Les meilleurs scores sont %d\n\n\n", temps, tab1[]);
+            relancer();
+        }
+    }
+    else if (diff == 2)
+    {
+       c = fgets(int * tab2[i], fichier);
+        if (c < temps)
+        {
+            while (c < temps)
+            {
+                i++;
+                c = fgets(int * i,fichier);
+            }
+        fprintf(fichier * tab2[i],"%d", temps)
+        relancer();
+        }
+        else if 
+        {
+            printf("\n\n\n\t\t\tVous avez GAGNÉ en %d secondes ! Les meilleurs scores sont %d\n\n\n", temps, tab2[]);
+            relancer();
+        }
+    }
+    else if (diff == 3)
+    {
+       c = fgets(int * tab3[i], fichier);
+        if (c < temps)
+        {
+            while (c < temps)
+            {
+                i++;
+                c = fgets(int * i,fichier);
+            }
+        fprintf(fichier * tab3[i],"%d", temps)
+        relancer();
+        }
+        else if 
+        {
+            printf("\n\n\n\t\t\tVous avez GAGNÉ en %d secondes ! Les meilleurs scores sont %d\n\n\n", temps, tab3[]);
+            relancer();
+        }
+    }*/
+}
+
+// La fonction qui va demander si on veut rejouer après une partie (Qu'elle soit perdue ou gagnée)
+void relancer( void )                                 
+{
+    char option[2];
+    printf("\n\t\tVoulez vous rejouer (O/N) ? :");
+    scanf("%c", &option[0]);
+    FLUSH;
+
+    // Fonction qui relance le programme ou le termine
+    if((option[0] == 'O') || (option[0] == 'o'))        
+    {
+        difficulte();
+    }
+    else if( (option[0] == 'N') || (option[0] == 'n'))
+    {
+        fin();
+    }
+    else
+    {
+        printf("Veuillez rentrer O ou N");
+        relancer();
+    }
+}
+
+// La fonction qui va terminer le programme
+void fin( void )                                
+{
+    printf("\n\n\t\tMerci d'avoir joué ! Revenez réessayer une prochaine fois !");
+/*    fclose(fichier) */
+    exit(1);
+}
